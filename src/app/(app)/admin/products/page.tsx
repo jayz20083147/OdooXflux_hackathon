@@ -61,9 +61,9 @@ export default async function ProductsPage() {
               action={
                 canManage
                   ? {
-                      label: "Create Product",
-                      href: "/admin/products/new",
-                    }
+                    label: "Create Product",
+                    href: "/admin/products/new",
+                  }
                   : undefined
               }
             />
