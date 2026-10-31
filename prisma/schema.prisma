@@ -1,0 +1,359 @@
+// Brightloop Subscription Management System
+// Prisma schema — SQLite (prototype)
+// NOTE: SQLite does not support Prisma enums, so role/frequency/status are
+// stored as strings and validated in application code (see src/lib/constants.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  // ADMIN | STAFF | CUSTOMER
+  role      String   @default("CUSTOMER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+  events        SubscriptionEvent[]
+  invoices      Invoice[]
+  payments      Payment[]
+
+  @@index([role])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  sku         String    @unique
+  description String?
+  category    String?
+  basePrice   Float
+  active      Boolean   @default(true)
+  variants    Variant[]
+  plans       Plan[]
+  lines       SubscriptionLine[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Product variant, e.g. { type: "BRAND", value: "Nike", surcharge: 4.5 }
+model Variant {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // e.g. BRAND | SIZE | COLOR | PACK
+  type      String   @default("BRAND")
+  value     String
+  sku       String   @unique
+  // brand surcharge (absolute amount added on top of the product base price)
+  surcharge Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lines     SubscriptionLine[]
+
+  @@index([productId])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  price       Float    @default(0)
+  // DAILY | WEEKLY | MONTHLY | YEARLY
+  frequency   String   @default("MONTHLY")
+  minQuantity Int      @default(1)
+
+  startDate   DateTime
+  endDate     DateTime?
+
+  // ---- lifecycle flags -------------------------------------------------
+  autoClose     Boolean @default(false) // close automatically at endDate
+  earlyClose    Boolean @default(false) // allow customers to close before endDate
+  earlyCloseDays Int    @default(0) // how many days before endDate early close opens
+  pauseAllowed  Boolean @default(false) // subscription can be paused
+  autoRenew     Boolean @default(false) // renew automatically at endDate
+  // ----------------------------------------------------------------------
+
+  // ACTIVE | INACTIVE
+  status      String   @default("ACTIVE")
+  subscriptions Subscription[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([productId])
+  @@index([status])
+}
+
+// A reusable quotation template (terms/validity) used when a subscription is
+// quoted to a customer.
+model QuotationTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  // number of days the quotation stays valid from issue
+  validityDays Int      @default(30)
+  // free-text terms & conditions shown on the quotation
+  terms        String?
+  // optional default discount percentage applied when quoting
+  defaultDiscountPercent Float @default(0)
+  active       Boolean  @default(true)
+  subscriptions Subscription[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([active])
+}
+
+// ------------------------------------------------------------------ billing
+// A customer subscription. Status machine:
+//   DRAFT -> QUOTATION -> CONFIRMED -> ACTIVE -> CLOSED
+model Subscription {
+  id        String @id @default(cuid())
+  reference String @unique // e.g. SUB-0001
+  customerId String
+  customer   User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  planId String?
+  plan   Plan?   @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  templateId String?
+  template   QuotationTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  // DRAFT | QUOTATION | CONFIRMED | ACTIVE | CLOSED
+  status String @default("DRAFT")
+
+  quantity Int      @default(1)
+  startDate DateTime @default(now())
+  endDate   DateTime?
+
+  // billing period cursor (advanced as invoices are generated)
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+
+  // PAUSED is represented by a pause timestamp; status stays ACTIVE.
+  pausedAt     DateTime?
+  resumeAt     DateTime?
+  closedAt     DateTime?
+  closedReason String?
+  renewCount   Int      @default(0)
+
+  // quotation snapshot totals (recalculated when moving to QUOTATION)
+  subtotal      Float @default(0)
+  taxTotal      Float @default(0)
+  discountTotal Float @default(0)
+  total         Float @default(0)
+  // validity window of the quotation
+  quotationValidUntil DateTime?
+  notes               String?
+
+  lines    SubscriptionLine[]
+  events   SubscriptionEvent[]
+  invoices Invoice[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([planId])
+}
+
+model SubscriptionLine {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId String?
+  variant   Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  description String
+  quantity    Int    @default(1)
+  unitPrice   Float  @default(0)
+  amount      Float  @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([subscriptionId])
+}
+
+// Audit trail for the subscription status machine and lifecycle actions.
+model SubscriptionEvent {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  // e.g. DRAFT->QUOTATION, PAUSED, RESUME, RENEW, EARLY_CLOSE, CLOSE
+  type           String
+  status         String?
+  note           String?
+  actorId        String?
+  actor          User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([subscriptionId])
+}
+
+// Invoice. Statuses: DRAFT | CONFIRMED | CANCELLED | PAID.
+// Idempotency is enforced by the unique (subscriptionId, periodStart, periodEnd)
+// constraint so "Generate invoices" can be run repeatedly without double billing.
+model Invoice {
+  id             String       @id @default(cuid())
+  number         String       @unique // e.g. INV-0001
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // DRAFT | CONFIRMED | CANCELLED | PAID
+  status String @default("DRAFT")
+
+  periodStart DateTime
+  periodEnd   DateTime
+  issuedAt    DateTime @default(now())
+  confirmedAt DateTime?
+  paidAt      DateTime?
+  cancelledAt DateTime?
+  dueAt       DateTime?
+
+  subtotal      Float @default(0)
+  taxTotal      Float @default(0)
+  discountTotal Float @default(0)
+  total         Float @default(0)
+  // sum of recorded payments; PAID when paidAmount >= total
+  paidAmount    Float @default(0)
+
+  lines     InvoiceLine[]
+  taxes     InvoiceTax[]
+  discounts InvoiceDiscount[]
+  usages    DiscountUsage[]
+  payments  Payment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subscriptionId, periodStart, periodEnd])
+  @@index([status])
+  @@index([customerId])
+}
+
+// A payment recorded against an invoice. Multiple (partial) payments are
+// allowed; the invoice is considered PAID once paidAmount >= total.
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount      Float
+  // CASH | CARD | BANK_TRANSFER | UPI | CHEQUE | OTHER
+  method      String   @default("BANK_TRANSFER")
+  reference   String?
+  note        String?
+  recordedById String?
+  recordedBy   User?   @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Float   @default(0)
+  amount      Float   @default(0)
+
+  @@index([invoiceId])
+}
+
+// Snapshot of an applied tax on an invoice.
+model InvoiceTax {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  name      String
+  rate      Float   @default(0)
+  amount    Float   @default(0)
+
+  @@index([invoiceId])
+}
+
+// Snapshot of an applied discount on an invoice.
+model InvoiceDiscount {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  name      String
+  kind      String  @default("PERCENT") // FIXED | PERCENT
+  value     Float   @default(0)
+  amount    Float   @default(0)
+
+  @@index([invoiceId])
+}
+
+// ------------------------------------------------------------------- rules
+// Tax rule. scope: ALL | CATEGORY | PRODUCT (scopeValue holds the category
+// name or product id). Auto-applied to invoices/billing.
+model TaxRule {
+  id         String   @id @default(cuid())
+  name       String
+  rate       Float    @default(0) // percentage
+  scope      String   @default("ALL")
+  scopeValue String?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([active])
+}
+
+// Discount rule. kind: FIXED | PERCENT. Conditioned by minimums and limited by
+// maxUses (0 = unlimited). Auto-applied to invoices; usage tracked via
+// DiscountUsage + usedCount.
+model DiscountRule {
+  id          String   @id @default(cuid())
+  name        String
+  code        String?  @unique
+  kind        String   @default("PERCENT") // FIXED | PERCENT
+  value       Float    @default(0)
+  // conditions
+  minSubtotal Float    @default(0)
+  minQuantity Int      @default(0)
+  scope       String   @default("ALL") // ALL | CATEGORY | PRODUCT
+  scopeValue  String?
+  maxUses     Int      @default(0) // 0 = unlimited
+  usedCount   Int      @default(0)
+  validFrom   DateTime?
+  validTo     DateTime?
+  active      Boolean  @default(true)
+  usages      DiscountUsage[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+}
+
+// Usage tracking for a discount rule against an invoice.
+model DiscountUsage {
+  id             String       @id @default(cuid())
+  discountRuleId String
+  discountRule   DiscountRule @relation(fields: [discountRuleId], references: [id], onDelete: Cascade)
+  invoiceId      String
+  invoice        Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount         Float        @default(0)
+  createdAt      DateTime     @default(now())
+
+  @@index([discountRuleId])
+  @@index([invoiceId])
+}
