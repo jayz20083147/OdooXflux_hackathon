@@ -8,7 +8,7 @@ export default async function AppLayout({
   const user = await requireUser();
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50">
+    <div className="flex min-h-screen bg-background">
       <AppSidebar role={user.role} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader user={user} />

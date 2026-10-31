@@ -79,16 +79,19 @@ export function AppSidebar({ role }: { role: Role }) {
   let lastSection = "";
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200/80 bg-slate-50/70 md:flex">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card/80 backdrop-blur-md md:flex">
       {/* Brand Header */}
-      <div className="flex h-16 items-center gap-3 border-b border-slate-200/80 px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm">
+      <div className="flex h-16 items-center gap-3 border-b border-border px-5 bg-card/60">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-ocean to-[#26628d] text-sm font-bold text-white shadow-xs ring-2 ring-brand-ocean/20">
           B
         </div>
         <div>
-          <p className="text-sm font-semibold tracking-tight text-foreground">Brightloop</p>
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-            Subscriptions
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-bold tracking-tight text-foreground">Brightloop</p>
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-peach"></span>
+          </div>
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+            Subscriptions OS
           </p>
         </div>
       </div>
@@ -108,7 +111,7 @@ export function AppSidebar({ role }: { role: Role }) {
           return (
             <div key={item.href}>
               {showSection && (
-                <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                   {item.section}
                 </p>
               )}
@@ -117,14 +120,14 @@ export function AppSidebar({ role }: { role: Role }) {
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                   active
-                    ? "bg-primary/10 text-primary font-semibold shadow-xs"
-                    : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900",
+                    ? "bg-brand-ocean/15 text-brand-ocean font-semibold shadow-xs"
+                    : "text-foreground/75 hover:bg-muted/70 hover:text-foreground",
                 )}
               >
                 <Icon
                   className={cn(
                     "h-4 w-4 transition-colors",
-                    active ? "text-primary" : "text-slate-400 group-hover:text-slate-700",
+                    active ? "text-brand-ocean" : "text-muted-foreground group-hover:text-foreground",
                   )}
                 />
                 <span>{item.label}</span>
@@ -135,17 +138,22 @@ export function AppSidebar({ role }: { role: Role }) {
       </nav>
 
       {/* Footer / Account */}
-      <div className="border-t border-slate-200/80 p-3 bg-slate-50/50">
-        <div className="px-3 pb-2">
-          <p className="text-xs font-medium text-slate-700">Role: {ROLE_LABEL[role]}</p>
-          <p className="text-[11px] text-muted-foreground">Brightloop Enterprise</p>
+      <div className="border-t border-border p-3 bg-muted/30">
+        <div className="px-3 pb-2 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-foreground">{ROLE_LABEL[role]}</p>
+            <p className="text-[11px] text-muted-foreground">Brightloop Enterprise</p>
+          </div>
+          <span className="rounded-full bg-brand-peach/30 text-[#9a4b16] px-2 py-0.5 text-[10px] font-bold">
+            Live
+          </span>
         </div>
         <form action={logoutAction}>
           <Button
             type="submit"
             variant="ghost"
             size="sm"
-            className="w-full justify-start gap-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-slate-200/50"
+            className="w-full justify-start gap-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <LogOut className="h-3.5 w-3.5" />
             Sign out

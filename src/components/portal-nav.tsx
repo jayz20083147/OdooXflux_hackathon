@@ -21,15 +21,15 @@ export function PortalNav({ userName }: { userName: string }) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Brand & Logo */}
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-ocean to-[#26628d] text-sm font-bold text-white shadow-xs ring-2 ring-brand-ocean/20">
             B
           </span>
           <span className="text-sm font-bold tracking-tight text-foreground">Brightloop</span>
-          <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-muted-foreground md:inline">
+          <span className="hidden rounded-full border border-border bg-brand-mint px-2 py-0.5 text-[11px] font-semibold text-brand-ocean md:inline">
             Customer Portal
           </span>
         </Link>
@@ -49,11 +49,11 @@ export function PortalNav({ userName }: { userName: string }) {
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150",
                   active
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                    ? "bg-brand-ocean/15 text-brand-ocean font-semibold shadow-2xs"
+                    : "text-foreground/75 hover:bg-muted/80 hover:text-foreground",
                 )}
               >
-                <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-slate-400")} />
+                <Icon className={cn("h-4 w-4", active ? "text-brand-ocean" : "text-muted-foreground")} />
                 <span>{link.label}</span>
               </Link>
             );
@@ -62,11 +62,11 @@ export function PortalNav({ userName }: { userName: string }) {
 
         {/* User & Sign Out (Desktop) */}
         <div className="hidden md:flex items-center gap-3">
-          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold text-[#7c2d12] bg-brand-peach/25 border border-brand-peach/40 px-3 py-1 rounded-full">
             {userName}
           </span>
           <form action={logoutAction}>
-            <Button type="submit" variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+            <Button type="submit" variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">
               <LogOut className="h-3.5 w-3.5" />
               Sign out
             </Button>

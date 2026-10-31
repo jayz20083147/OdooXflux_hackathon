@@ -11,6 +11,13 @@ const config: Config = {
     },
     extend: {
       colors: {
+        brand: {
+          ocean: "#3581b8",
+          peach: "#fcb07e",
+          mint: "#f3f8f2",
+          platinum: "#ebe9e9",
+          timberwolf: "#dee2d6",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
