@@ -5,6 +5,7 @@ import type { NextAuthConfig } from "next-auth";
  * It must NOT import Prisma or bcrypt so that it can run inside middleware.
  */
 export const authConfig = {
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "brightloop-super-secure-production-secret-key-32chars",
   pages: {
     signIn: "/login",
   },
