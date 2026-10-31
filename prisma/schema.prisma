@@ -1,14 +1,12 @@
 // Brightloop Subscription Management System
-// Prisma schema — SQLite (prototype)
-// NOTE: SQLite does not support Prisma enums, so role/frequency/status are
-// stored as strings and validated in application code (see src/lib/constants.ts).
+// Prisma schema — PostgreSQL
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

@@ -19,7 +19,7 @@ npm install
 
 ### 3. Initialize & Seed Database
 ```bash
-# Push Prisma schema to local SQLite database (dev.db)
+# Push Prisma schema to PostgreSQL database
 npx prisma db push
 
 # Populate with realistic test accounts, products, variants, plans, subscriptions, and invoices
@@ -155,8 +155,7 @@ The script exercises:
 ```text
 brightloop-final/
 ├── prisma/
-│   ├── dev.db                 # Local SQLite database
-│   ├── schema.prisma          # Comprehensive Prisma schema
+│   ├── schema.prisma          # Comprehensive PostgreSQL Prisma schema
 │   └── seed.ts                # Idempotent seed with realistic business data
 ├── public/
 │   ├── logo.svg               # Application SVG brand icon
