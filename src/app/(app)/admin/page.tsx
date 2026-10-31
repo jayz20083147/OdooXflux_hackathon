@@ -916,7 +916,7 @@ export default async function AdminDashboardPage() {
             </span>
           </div>
           <div>
-            <span>Prisma 6 SQLite Engine · Mathematical Billing Engine · Idempotent Invoicing</span>
+            <span>Prisma 6 PostgreSQL 16 Engine · Mathematical Billing Engine · Idempotent Invoicing</span>
           </div>
         </CardContent>
       </Card>

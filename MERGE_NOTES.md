@@ -19,7 +19,7 @@ This document details the analysis, architectural decisions, and conflict resolu
 ### 2.1 Core Architectural Foundation: Next.js 15 + Prisma 6 + NextAuth v5
 We selected `trae` as the foundational codebase because it possessed by far the cleanest separation of concerns, the most complete billing logic, and production-grade TypeScript typings.
 - **Next.js 15.5.28** (App Router, Server Actions, Server Components)
-- **Prisma 6.19.3** with SQLite database (`dev.db`)
+- **Prisma 6.19.3** with PostgreSQL 16 database (Docker / local)
 - **NextAuth.js v5 (Auth.js beta 32)** with edge-safe `auth.config.ts` and JWT sessions
 - **Tailwind CSS + Radix UI primitives** with custom styling
 
