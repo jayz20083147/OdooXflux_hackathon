@@ -57,3 +57,4 @@ prisma/dev.db-journal
 *.swp
 *.swo
 .claude/
+.env*

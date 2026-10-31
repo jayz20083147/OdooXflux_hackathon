@@ -24,7 +24,8 @@
 
 ## 🌐 Live Deployment & Demo Links
 
-* 🚀 **Live Demo App:** **[https://author-envy-try.ngrok-free.dev](https://author-envy-try.ngrok-free.dev)**
+* ⚡ **Live Vercel Production:** **[https://brightloop-khaki.vercel.app](https://brightloop-khaki.vercel.app)**
+* 🚀 **Live Evaluator App:** **[https://author-envy-try.ngrok-free.dev](https://author-envy-try.ngrok-free.dev)**
 * 💻 **GitHub Repository:** **[jayz20083147/OdooXflux_hackathon](https://github.com/jayz20083147/OdooXflux_hackathon)**
 * 🐘 **Database Engine:** PostgreSQL 16 (Docker & Production-ready)
 * 🎨 **Custom Design Palette:** [Coolors Palette](https://coolors.co/ebe9e9-f3f8f2-3581b8-fcb07e-dee2d6) (`#f3f8f2`, `#3581b8`, `#fcb07e`, `#dee2d6`, `#ebe9e9`)
@@ -795,9 +796,9 @@ The script exercises all problem statement requirements end-to-end:
 
 ## 🚢 Deployment
 
-### 1. Live Public Deployment (Current)
-The project is deployed and accessible publicly at:
-**[https://author-envy-try.ngrok-free.dev](https://author-envy-try.ngrok-free.dev)**
+### 1. Live Production Deployment
+* **Vercel Cloud Production:** **[https://brightloop-khaki.vercel.app](https://brightloop-khaki.vercel.app)**
+* **Live Evaluator App:** **[https://author-envy-try.ngrok-free.dev](https://author-envy-try.ngrok-free.dev)**
 
 ### 2. Docker Setup
 To run the full stack locally with PostgreSQL:
