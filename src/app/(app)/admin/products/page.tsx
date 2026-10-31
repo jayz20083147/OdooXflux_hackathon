@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
+  Tab le,
   TableBody,
   TableCell,
   TableHead,
@@ -61,9 +61,9 @@ export default async function ProductsPage() {
               action={
                 canManage
                   ? {
-                      label: "Create Product",
-                      href: "/admin/products/new",
-                    }
+                    label: "Create Product",
+                    href: "/admin/products/new",
+                  }
                   : undefined
               }
             />
