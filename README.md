@@ -14,7 +14,6 @@ A complete, production-grade recurring subscription management, invoicing, and f
 
 ### 2. Install Dependencies
 ```bash
-cd brightloop-final
 npm install
 ```
 
@@ -52,7 +51,7 @@ All test accounts follow the strict password policy: **minimum 8 characters, at 
 | **CUSTOMER** | `customer1@brightloop.com` | `Customer@123` | **Strictly Isolated Customer Portal**: My Subscriptions, Self-Service Catalog Checkout, Invoices, Online Invoice Payments |
 | **CUSTOMER** | `customer2@brightloop.com` | `Customer@123` | Isolated Customer Portal |
 
-*Alternative demo credentials from other builds (`admin@brightloop.io` / `AdminPassword2026!`, `admin@brightloop.test` / `Password123!`) are also seeded and fully functional.*
+*Alternative demo credentials (`admin@brightloop.io` / `AdminPassword2026!`, `admin@brightloop.test` / `Password123!`) are also seeded and fully functional.*
 
 ---
 
@@ -144,20 +143,24 @@ The script exercises:
 - **Scene 3**: Staff Provisions Subscription with Discount ($1,547 recurring)
 - **Scene 4**: Verify Auto-Generated Invoice ($1,547 balance, OPEN)
 - **Scene 5**: Record Payment:
-  - Partial payment ($547) $\rightarrow$ Status: `PARTIAL`, Balance: $1,000
-  - Final payment ($1,000) $\rightarrow$ Status: `PAID`, Balance: $0, `paidAt` timestamp
+  - Partial payment ($547) → Status: `PARTIAL`, Balance: $1,000
+  - Final payment ($1,000) → Status: `PAID`, Balance: $0, `paidAt` timestamp
 - **Scene 6**: Customer Portal Isolation (verify customer only sees own data, 403 on admin APIs)
 - **Scene 7**: Finance Dashboard KPIs (<200ms query latency)
 
 ---
 
-## 📁 Repository Structure
+## 📁 Clean Project Structure
 
 ```text
 brightloop-final/
 ├── prisma/
-│   ├── schema.prisma          # Comprehensive SQLite schema
+│   ├── dev.db                 # Local SQLite database
+│   ├── schema.prisma          # Comprehensive Prisma schema
 │   └── seed.ts                # Idempotent seed with realistic business data
+├── public/
+│   ├── logo.svg               # Application SVG brand icon
+│   └── .gitkeep               # Public static assets directory
 ├── scripts/
 │   ├── verify.ts              # Sanity test suite
 │   └── verify_full.ts         # Complete 7-Scene E2E automated test suite
@@ -186,19 +189,33 @@ brightloop-final/
 │   │   ├── api/               # Secure REST API endpoints (/auth, /products, /plans, etc.)
 │   │   ├── forbidden/         # 403 Forbidden page
 │   │   ├── globals.css        # Tailwind CSS variables & styles
-│   │   └── layout.tsx         # Root layout
+│   │   ├── layout.tsx         # Root layout
+│   │   └── page.tsx           # Home redirector
 │   ├── components/            # UI components (sidebar, portal nav, payment form, etc.)
+│   │   ├── ui/                # Radix UI primitives (badge, button, card, dialog, table, etc.)
+│   │   ├── app-sidebar.tsx    # Admin & staff navigation sidebar
+│   │   ├── portal-nav.tsx     # Customer navigation header
+│   │   ├── payment-form.tsx   # Payment entry component
+│   │   └── subscription-actions.tsx # Lifecycle action triggers
 │   ├── lib/
 │   │   ├── billing.ts         # Pure mathematical billing engine
 │   │   ├── billing-service.ts # DB orchestration service (idempotent generator, etc.)
 │   │   ├── constants.ts       # State machines, enums, formatters
 │   │   ├── prisma.ts          # Prisma singleton client
 │   │   ├── session.ts         # Role guard helpers (requireUser, requireRole)
+│   │   ├── utils.ts           # Tailwind className merge helper
 │   │   └── validators.ts      # Zod validation schemas
+│   ├── types/
+│   │   └── next-auth.d.ts     # NextAuth custom type definitions
 │   ├── auth.config.ts         # Edge-safe NextAuth configuration
 │   ├── auth.ts                # NextAuth Credentials provider with Prisma & bcrypt
 │   └── middleware.ts          # RBAC route protection middleware
-├── package.json               # Dependencies & scripts
-├── MERGE_NOTES.md             # Detailed log of merged components & conflict resolutions
-└── README.md                  # This documentation
+├── .env                       # Local environment variables
+├── .env.example               # Environment variables template
+├── .gitignore                 # Clean standard Git ignore rules
+├── next.config.mjs            # Next.js 15 configuration
+├── package.json               # Next.js dependencies & scripts
+├── README.md                  # Project documentation
+├── tailwind.config.ts         # Tailwind CSS styling configuration
+└── tsconfig.json              # TypeScript configuration
 ```
