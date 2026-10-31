@@ -130,14 +130,17 @@ export default async function ProductsPage() {
                               <span className="sr-only">Edit</span>
                             </Link>
                           </Button>
-                          <form action={toggleProductActiveAction.bind(null, product.id)}>
+                          <form action={toggleProductActiveAction}>
+                            <input type="hidden" name="id" value={product.id} />
                             <Button size="sm" variant="outline" className="text-xs">
                               {product.active ? "Archive" : "Activate"}
                             </Button>
                           </form>
                           <DeleteButton
-                            action={deleteProductAction.bind(null, product.id)}
-                            title="Delete product"
+                            id={product.id}
+                            action={deleteProductAction}
+                            title={`Delete “${product.name}”?`}
+                            description="This product will be permanently removed from the catalog."
                           />
                         </div>
                       </TableCell>
