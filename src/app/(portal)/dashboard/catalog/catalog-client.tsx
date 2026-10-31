@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, CheckCircle, Layers, Sparkles, Tag, X } from "lucide-react";
+import { ArrowRight, CheckCircle, Layers, ShoppingBag, Sparkles, Tag, X } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 import { customerSubscribeAction } from "@/app/actions/subscriptions";
 import { Badge } from "@/components/ui/badge";
@@ -127,72 +128,86 @@ export function CatalogClient({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <Card key={plan.id} className="flex flex-col justify-between hover:border-primary/50 transition-all">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base">{plan.name}</CardTitle>
-                <Badge variant="outline">
-                  {FREQUENCY_LABEL[plan.frequency as Frequency] ?? plan.frequency}
-                </Badge>
-              </div>
-              <CardDescription>{plan.description || "Recurring subscription plan"}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(plan.price)}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {" "}
-                    / {plan.frequency.toLowerCase()}
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Min quantity: {plan.minQuantity}
-                </p>
-              </div>
+      {plans.length === 0 ? (
+        <Card>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={ShoppingBag}
+              title="No active subscription plans"
+              description="No subscription plans are currently published for customer self-enrollment. Please contact support or check back soon."
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <Card key={plan.id} className="flex flex-col justify-between h-full hover:border-primary/50 hover:shadow-md transition-all">
+              <CardHeader className="pb-3 border-b">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base font-semibold">{plan.name}</CardTitle>
+                  <Badge variant="outline">
+                    {FREQUENCY_LABEL[plan.frequency as Frequency] ?? plan.frequency}
+                  </Badge>
+                </div>
+                <CardDescription className="line-clamp-2">{plan.description || "Recurring subscription plan"}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col flex-1 justify-between space-y-4 pt-4">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-3xl font-bold font-mono text-foreground">
+                      {formatCurrency(plan.price)}
+                      <span className="text-xs font-normal text-muted-foreground font-sans">
+                        {" "}
+                        / {plan.frequency.toLowerCase()}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Min contract quantity: {plan.minQuantity}
+                    </p>
+                  </div>
 
-              {plan.product ? (
-                <div className="rounded-md border bg-muted/40 p-2.5 space-y-1.5 text-xs">
-                  <p className="font-medium text-foreground">Product: {plan.product.name}</p>
-                  {plan.product.variants.length > 0 ? (
-                    <div>
-                      <span className="text-muted-foreground block mb-1">Available variants:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {plan.product.variants.map((v) => (
-                          <Badge key={v.id} variant="secondary" className="text-[10px]">
-                            {v.value} (+{formatCurrency(v.surcharge)})
-                          </Badge>
-                        ))}
-                      </div>
+                  {plan.product ? (
+                    <div className="rounded-lg border bg-muted/30 p-2.5 space-y-1.5 text-xs">
+                      <p className="font-semibold text-foreground">Product: {plan.product.name}</p>
+                      {plan.product.variants.length > 0 ? (
+                        <div>
+                          <span className="text-muted-foreground block mb-1">Available tiers / variants:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {plan.product.variants.map((v) => (
+                              <Badge key={v.id} variant="secondary" className="text-[10px]">
+                                {v.value} (+{formatCurrency(v.surcharge)})
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
+
+                  <div className="flex flex-wrap gap-1">
+                    {plan.earlyClose ? (
+                      <Badge variant="warning" className="text-[10px]">
+                        early close{plan.earlyCloseDays > 0 ? ` ${plan.earlyCloseDays}d` : ""}
+                      </Badge>
+                    ) : null}
+                    {plan.pauseAllowed ? <Badge variant="secondary" className="text-[10px]">pausable</Badge> : null}
+                    {plan.autoRenew ? <Badge className="text-[10px]">auto renew</Badge> : null}
+                  </div>
                 </div>
-              ) : null}
 
-              <div className="flex flex-wrap gap-1">
-                {plan.earlyClose ? (
-                  <Badge variant="warning" className="text-[10px]">
-                    early close{plan.earlyCloseDays > 0 ? ` ${plan.earlyCloseDays}d` : ""}
-                  </Badge>
-                ) : null}
-                {plan.pauseAllowed ? <Badge variant="secondary" className="text-[10px]">pausable</Badge> : null}
-                {plan.autoRenew ? <Badge className="text-[10px]">auto renew</Badge> : null}
-              </div>
-
-              <Button
-                onClick={() => openSubscribeModal(plan)}
-                id={`btn-subscribe-${plan.id}`}
-                className="w-full gap-2"
-              >
-                <span>Subscribe to Plan</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <Button
+                  onClick={() => openSubscribeModal(plan)}
+                  id={`btn-subscribe-${plan.id}`}
+                  className="w-full gap-2 mt-auto"
+                >
+                  <span>Subscribe to Plan</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Subscribe Modal */}
       {modalOpen && selectedPlan ? (

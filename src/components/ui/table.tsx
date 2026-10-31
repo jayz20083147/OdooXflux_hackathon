@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.ComponentProps<"table">>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
+    <div className="relative w-full overflow-x-auto">
       <table
         ref={ref}
         className={cn("w-full caption-bottom text-sm", className)}
@@ -19,7 +19,11 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.ComponentProps<"thead">
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+  <thead
+    ref={ref}
+    className={cn("border-b bg-slate-50/75 text-xs uppercase tracking-wider text-muted-foreground", className)}
+    {...props}
+  />
 ));
 TableHeader.displayName = "TableHeader";
 
@@ -29,7 +33,7 @@ const TableBody = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
-    className={cn("[&_tr:last-child]:border-0", className)}
+    className={cn("[&_tr:last-child]:border-0 divide-y divide-border/60", className)}
     {...props}
   />
 ));
@@ -40,7 +44,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.ComponentProps<"tr"
     <tr
       ref={ref}
       className={cn(
-        "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "border-b border-border/50 transition-colors hover:bg-slate-50/70 data-[state=selected]:bg-muted/60",
         className,
       )}
       {...props}
@@ -56,7 +60,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-3 text-left align-middle text-xs font-semibold uppercase tracking-wide text-muted-foreground",
+      "h-10 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground",
       className,
     )}
     {...props}
@@ -68,7 +72,7 @@ const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.ComponentProps<"td">
 >(({ className, ...props }, ref) => (
-  <td ref={ref} className={cn("p-3 align-middle", className)} {...props} />
+  <td ref={ref} className={cn("px-4 py-3.5 align-middle text-sm", className)} {...props} />
 ));
 TableCell.displayName = "TableCell";
 

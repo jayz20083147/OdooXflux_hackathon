@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowRight,
   CalendarClock,
   Package,
   ReceiptText,
@@ -8,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { EmptyState } from "@/components/empty-state";
 import {
   paymentStateVariant,
   subscriptionStatusVariant,
@@ -86,84 +88,120 @@ export default async function CustomerOverviewPage() {
     {
       label: "Active subscriptions",
       value: String(activeCount),
-      hint: `${subscriptions.length} total`,
+      hint: `${subscriptions.length} lifetime contract${subscriptions.length === 1 ? "" : "s"}`,
       icon: CalendarClock,
-      tone: "text-primary",
+      color: "text-primary",
+      bg: "bg-primary/10",
+      border: "border-primary/20",
     },
     {
       label: "Outstanding balance",
       value: formatCurrency(outstanding),
-      hint: "across issued invoices",
+      hint: "across issued billing statements",
       icon: Wallet,
-      tone: "text-amber-600",
+      color: "text-amber-600",
+      bg: "bg-amber-500/10",
+      border: "border-amber-200",
     },
     {
-      label: "Overdue",
+      label: "Overdue balance",
       value: formatCurrency(overdue),
-      hint: "please settle these",
+      hint: overdue > 0 ? "please settle immediately" : "all payments up to date",
       icon: AlertTriangle,
-      tone: "text-destructive",
+      color: overdue > 0 ? "text-destructive" : "text-emerald-600",
+      bg: overdue > 0 ? "bg-destructive/10" : "bg-emerald-500/10",
+      border: overdue > 0 ? "border-destructive/20" : "border-emerald-200",
     },
   ];
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      {/* Welcome & Quick Actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Hi {user.name ?? "there"}</h1>
-          <p className="text-sm text-muted-foreground">
-            Your subscriptions, invoices and balances in one place.
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Welcome back, {user.name ?? "Customer"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your subscription contracts, recurring billing terms and invoices.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button asChild>
+        <div className="flex items-center gap-2.5">
+          <Button asChild size="sm">
             <Link href="/dashboard/catalog">
               <ShoppingBag className="mr-1.5 h-4 w-4" /> Browse Catalog & Plans
             </Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/invoices">
-              <ReceiptText /> All invoices
+              <ReceiptText className="mr-1.5 h-4 w-4" /> All Invoices
             </Link>
           </Button>
         </div>
       </div>
 
+      {/* Top 3 KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Card key={kpi.label}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card key={kpi.label} className={`border bg-card p-5 shadow-sm transition-all ${kpi.border}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {kpi.label}
-                </CardTitle>
-                <Icon className={`h-4 w-4 ${kpi.tone}`} />
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-semibold">{kpi.value}</p>
+                </span>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${kpi.bg}`}>
+                  <Icon className={`h-4.5 w-4.5 ${kpi.color}`} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-3xl font-bold font-mono tracking-tight text-foreground">
+                  {kpi.value}
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">{kpi.hint}</p>
-              </CardContent>
+              </div>
             </Card>
           );
         })}
       </div>
 
-      <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          <CalendarClock className="h-4 w-4" /> My subscriptions ({subscriptions.length})
-        </h2>
+      {/* Subscriptions Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+            <CalendarClock className="h-4 w-4 text-primary" /> My Active Subscriptions ({subscriptions.length})
+          </h2>
+          <Button asChild variant="ghost" size="sm" className="text-xs">
+            <Link href="/dashboard/subscriptions">
+              <span>View all subscriptions</span>
+              <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
+
         {subscriptions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            You have no subscriptions yet. Contact Brightloop to get started.
-          </p>
+          <Card>
+            <CardContent className="p-0">
+              <EmptyState
+                icon={CalendarClock}
+                title="No active subscriptions yet"
+                description="Explore our product catalog to choose a software plan or physical tier."
+                action={{
+                  label: "Browse Catalog",
+                  href: "/dashboard/catalog",
+                }}
+              />
+            </CardContent>
+          </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {subscriptions.map((sub) => (
-              <Card key={sub.id}>
-                <CardHeader>
+              <Card key={sub.id} className="flex flex-col justify-between transition-all hover:shadow-md">
+                <CardHeader className="pb-3 border-b">
                   <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-base">{sub.reference}</CardTitle>
+                    <CardTitle className="font-mono text-base font-semibold text-foreground">
+                      {sub.reference}
+                    </CardTitle>
                     <div className="flex flex-wrap items-center justify-end gap-1">
                       <Badge variant={subscriptionStatusVariant(sub.status)}>
                         {SUBSCRIPTION_STATUS_LABEL[sub.status as SubscriptionStatus] ??
@@ -172,33 +210,38 @@ export default async function CustomerOverviewPage() {
                       {sub.pausedAt ? <Badge variant="warning">Paused</Badge> : null}
                     </div>
                   </div>
-                  <CardDescription>{sub.plan?.name ?? "No plan linked"}</CardDescription>
+                  <CardDescription className="font-medium text-foreground">
+                    {sub.plan?.name ?? "Custom contract agreement"}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-2xl font-semibold">
-                    {formatCurrency(sub.total)}
-                    {sub.plan ? (
-                      <span className="text-sm font-normal text-muted-foreground">
-                        {" "}
-                        / {FREQUENCY_LABEL[sub.plan.frequency as Frequency]?.toLowerCase()}
-                      </span>
-                    ) : null}
-                  </p>
-                  <dl className="space-y-1 text-xs text-muted-foreground">
+                <CardContent className="space-y-4 pt-4">
+                  <div>
+                    <p className="text-2xl font-bold font-mono text-foreground">
+                      {formatCurrency(sub.total)}
+                      {sub.plan ? (
+                        <span className="text-xs font-normal text-muted-foreground font-sans">
+                          {" "}
+                          / {FREQUENCY_LABEL[sub.plan.frequency as Frequency]?.toLowerCase()}
+                        </span>
+                      ) : null}
+                    </p>
+                  </div>
+                  <dl className="space-y-1.5 text-xs text-muted-foreground bg-slate-50 p-2.5 rounded-lg border border-slate-100">
                     <div className="flex justify-between">
-                      <dt>Window</dt>
-                      <dd className="text-foreground">
+                      <dt>Cycle Window</dt>
+                      <dd className="font-medium text-foreground">
                         {formatDate(sub.startDate)} → {formatDate(sub.endDate)}
                       </dd>
                     </div>
                     <div className="flex justify-between">
                       <dt>Quantity</dt>
-                      <dd className="text-foreground">{sub.quantity}</dd>
+                      <dd className="font-medium text-foreground">{sub.quantity}</dd>
                     </div>
                   </dl>
                   <Button asChild variant="outline" size="sm" className="w-full">
                     <Link href={`/dashboard/subscriptions/${sub.id}`}>
-                      Manage subscription
+                      <span>Manage Subscription</span>
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Link>
                   </Button>
                 </CardContent>
@@ -208,45 +251,56 @@ export default async function CustomerOverviewPage() {
         )}
       </section>
 
-      <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          <ReceiptText className="h-4 w-4" /> Recent invoices
-        </h2>
+      {/* Recent Invoices Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+            <ReceiptText className="h-4 w-4 text-primary" /> Recent Invoices
+          </h2>
+          <Button asChild variant="ghost" size="sm" className="text-xs">
+            <Link href="/dashboard/invoices">
+              <span>View all invoices</span>
+              <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
+
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Number</TableHead>
-                  <TableHead>Subscription</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead>State</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentInvoices.length === 0 ? (
+            {recentInvoices.length === 0 ? (
+              <EmptyState
+                icon={ReceiptText}
+                title="No invoices generated yet"
+                description="Once your active subscriptions enter their billing cycle, invoices and receipts will appear here."
+              />
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                      No invoices yet.
-                    </TableCell>
+                    <TableHead>Invoice #</TableHead>
+                    <TableHead>Subscription</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>State</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Remaining Balance</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ) : (
-                  recentInvoices.map((invoice) => {
+                </TableHeader>
+                <TableBody>
+                  {recentInvoices.map((invoice) => {
                     const state = invoicePaymentState(invoice);
                     const balance = invoiceBalance(invoice);
                     return (
                       <TableRow key={invoice.id}>
-                        <TableCell>
+                        <TableCell className="font-mono font-medium">
                           <Link
                             href={`/dashboard/invoices/${invoice.id}`}
-                            className="font-medium text-primary hover:underline"
+                            className="text-primary hover:underline"
                           >
                             {invoice.number}
                           </Link>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="font-mono text-xs text-muted-foreground">
                           {invoice.subscription.reference}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
@@ -257,119 +311,33 @@ export default async function CustomerOverviewPage() {
                             {INVOICE_PAYMENT_STATE_LABEL[state]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right font-mono font-medium">
                           {formatCurrency(invoice.total)}
                         </TableCell>
                         <TableCell
                           className={
                             balance > 0
-                              ? "text-right font-medium text-destructive"
-                              : "text-right text-muted-foreground"
+                              ? "text-right font-mono font-semibold text-destructive"
+                              : "text-right font-mono text-muted-foreground"
                           }
                         >
                           {formatCurrency(balance)}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={`/dashboard/invoices/${invoice.id}`}>
+                              {balance > 0 ? "Pay" : "View"}
+                            </Link>
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
-      </section>
-
-      <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          <CalendarClock className="h-4 w-4" /> Available plans ({plans.length})
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {plans.map((plan) => (
-            <Card key={plan.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base">{plan.name}</CardTitle>
-                  <Badge variant="outline">
-                    {FREQUENCY_LABEL[plan.frequency as Frequency] ?? plan.frequency}
-                  </Badge>
-                </div>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-2xl font-semibold">
-                  {formatCurrency(plan.price)}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {" "}
-                    / {plan.frequency.toLowerCase()}
-                  </span>
-                </p>
-                <dl className="space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <dt>Product</dt>
-                    <dd className="text-foreground">{plan.product?.name ?? "—"}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Minimum quantity</dt>
-                    <dd className="text-foreground">{plan.minQuantity}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Runs</dt>
-                    <dd className="text-foreground">
-                      {formatDate(plan.startDate)} → {formatDate(plan.endDate)}
-                    </dd>
-                  </div>
-                </dl>
-                <div className="flex flex-wrap gap-1">
-                  {plan.earlyClose ? (
-                    <Badge variant="warning">
-                      early close{plan.earlyCloseDays > 0 ? ` ${plan.earlyCloseDays}d` : ""}
-                    </Badge>
-                  ) : null}
-                  {plan.pauseAllowed ? <Badge variant="secondary">pausable</Badge> : null}
-                  {plan.autoRenew ? <Badge>auto renew</Badge> : null}
-                  {plan.autoClose ? <Badge variant="success">auto close</Badge> : null}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {plans.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active plans right now.</p>
-          ) : null}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          <Package className="h-4 w-4" /> Product catalogue ({products.length})
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
-            <Card key={product.id}>
-              <CardHeader>
-                <CardTitle className="text-base">{product.name}</CardTitle>
-                <CardDescription>
-                  {product.category || "Uncategorised"} · {product.sku}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-lg font-semibold">
-                  {formatCurrency(product.basePrice)}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {product.variants.map((variant) => (
-                    <Badge key={variant.id} variant="outline">
-                      {variant.value}
-                      {variant.surcharge > 0 ? ` +${formatCurrency(variant.surcharge)}` : ""}
-                    </Badge>
-                  ))}
-                  {product.variants.length === 0 ? (
-                    <span className="text-xs text-muted-foreground">No variants</span>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </section>
     </div>
   );

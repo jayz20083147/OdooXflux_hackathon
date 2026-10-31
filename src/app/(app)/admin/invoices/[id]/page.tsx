@@ -88,6 +88,24 @@ export default async function AdminInvoiceDetailPage({
         </div>
       </PageHeader>
 
+      {/* Visual Status Banner */}
+      {pState === "PAID" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/80 text-emerald-800 font-bold text-xs">✓</span>
+          <p><strong className="font-semibold">Paid in Full:</strong> This invoice has been completely settled with zero remaining balance.</p>
+        </div>
+      ) : pState === "OVERDUE" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-200/80 text-rose-800 font-bold text-xs">⚠</span>
+          <p><strong className="font-semibold">Invoice Past Due:</strong> Due date was {formatDate(invoice.dueAt)}. Outstanding balance: {formatCurrency(balance)}.</p>
+        </div>
+      ) : pState === "PARTIAL" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200/80 text-blue-800 font-bold text-xs">ⓘ</span>
+          <p><strong className="font-semibold">Partial Payment:</strong> Received {formatCurrency(invoice.paidAmount)} of {formatCurrency(invoice.total)}. Remaining: {formatCurrency(balance)}.</p>
+        </div>
+      ) : null}
+
       {/* Action Controls Bar */}
       <Card className="border-border bg-slate-50/50">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">

@@ -76,12 +76,30 @@ export default async function CustomerInvoiceDetailPage({
             </Link>
           </p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" size="sm">
           <Link href="/dashboard/invoices">
-            <ArrowLeft /> Back
+            <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to Invoices
           </Link>
         </Button>
       </div>
+
+      {/* Visual Status Callout */}
+      {state === "PAID" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/80 text-emerald-800 font-bold text-xs">✓</span>
+          <p><strong className="font-semibold">Paid in Full:</strong> This invoice has been settled with zero balance due.</p>
+        </div>
+      ) : state === "OVERDUE" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-200/80 text-rose-800 font-bold text-xs">⚠</span>
+          <p><strong className="font-semibold">Past Due Notice:</strong> This statement passed its due date ({formatDate(invoice.dueAt)}). Please submit payment below.</p>
+        </div>
+      ) : balance > 0 ? (
+        <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200/80 text-blue-800 font-bold text-xs">ⓘ</span>
+          <p><strong className="font-semibold">Payment Pending:</strong> Outstanding balance of {formatCurrency(balance)} is due on {formatDate(invoice.dueAt)}.</p>
+        </div>
+      ) : null}
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between space-y-0">

@@ -96,6 +96,24 @@ export default async function AdminSubscriptionDetailPage({
         </div>
       </PageHeader>
 
+      {/* Visual Status Banner */}
+      {sub.status === "ACTIVE" && !sub.pausedAt ? (
+        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/80 text-emerald-800 font-bold text-xs">✓</span>
+          <p><strong className="font-semibold">Active Subscription Contract:</strong> Recurring billing is active on this agreement.</p>
+        </div>
+      ) : sub.pausedAt ? (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/80 text-amber-800 font-bold text-xs">⏸</span>
+          <p><strong className="font-semibold">Subscription Paused:</strong> Automatic invoice generation and recurring cycles are suspended until resumed.</p>
+        </div>
+      ) : sub.status === "QUOTATION" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200/80 text-blue-800 font-bold text-xs">ⓘ</span>
+          <p><strong className="font-semibold">Quotation Phase:</strong> Awaiting customer confirmation before contract activation.</p>
+        </div>
+      ) : null}
+
       {/* Lifecycle Actions Bar */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-3">

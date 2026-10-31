@@ -2,12 +2,15 @@ import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import {
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
   FileSpreadsheet,
+  FileText,
   Filter,
   Wallet,
 } from "lucide-react";
 
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { paymentStateVariant } from "@/components/subscription-actions";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +88,7 @@ export default async function FinancePage({
       where,
       orderBy: { issuedAt: "desc" },
       include: {
-        customer: { select: { name: true } },
+        customer: { select: { name: true, email: true } },
         subscription: { select: { reference: true } },
       },
     }),
@@ -101,14 +104,10 @@ export default async function FinancePage({
   }));
 
   const rows = stateParam
-    ? withState.filter((row) => row.state === stateParam)
+    ? withState.filter((item) => item.state === stateParam)
     : withState;
 
-  const settledRows = rows.filter(
-    ({ invoice }) => invoice.status !== "DRAFT" && invoice.status !== "CANCELLED",
-  );
-
-  const invoiceIds = rows.map(({ invoice }) => invoice.id);
+  const invoiceIds = invoices.map((i) => i.id);
   const revenueAggregate =
     invoiceIds.length > 0
       ? await prisma.payment.aggregate({
@@ -117,6 +116,7 @@ export default async function FinancePage({
         })
       : null;
 
+  const settledRows = rows.filter((r) => r.invoice.status !== "CANCELLED");
   const revenue = revenueAggregate?._sum.amount ?? 0;
   const outstanding = settledRows.reduce((sum, row) => sum + row.balance, 0);
   const overdue = rows
@@ -128,79 +128,90 @@ export default async function FinancePage({
     {
       label: "Active subscriptions",
       value: String(activeSubscriptionCount),
-      hint: customerId ? "for the selected customer" : "currently active",
+      hint: customerId ? "for the selected customer" : "currently under billing",
       icon: FileSpreadsheet,
-      tone: "text-primary",
+      color: "text-primary",
+      bg: "bg-primary/10",
+      border: "border-primary/20",
     },
     {
       label: "Revenue collected",
       value: formatCurrency(revenue),
-      hint: "payments recorded on filtered invoices",
+      hint: "settled payments on filtered book",
       icon: Wallet,
-      tone: "text-emerald-600",
+      color: "text-emerald-600",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-200",
     },
     {
-      label: "Outstanding",
+      label: "Outstanding balance",
       value: formatCurrency(outstanding),
-      hint: "issued and not fully settled",
+      hint: "issued and pending completion",
       icon: CheckCircle2,
-      tone: "text-amber-600",
+      color: "text-amber-600",
+      bg: "bg-amber-500/10",
+      border: "border-amber-200",
     },
     {
-      label: "Overdue",
+      label: "Overdue balance",
       value: formatCurrency(overdue),
-      hint: `${overdueCount} invoice${overdueCount === 1 ? "" : "s"} past due`,
+      hint: `${overdueCount} invoice${overdueCount === 1 ? "" : "s"} past due date`,
       icon: AlertTriangle,
-      tone: "text-destructive",
+      color: "text-destructive",
+      bg: "bg-destructive/10",
+      border: "border-destructive/20",
     },
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title="Finance"
-        description="Revenue, outstanding and overdue balances across the invoice book."
+        title="Finance Ledger"
+        description="Cash collections, outstanding balances and overdue receivables across the active invoice book."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Top Metric Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Card key={kpi.label}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card key={kpi.label} className={`border bg-card p-5 shadow-sm transition-all ${kpi.border}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {kpi.label}
-                </CardTitle>
-                <Icon className={`h-4 w-4 ${kpi.tone}`} />
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-semibold">{kpi.value}</p>
+                </span>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${kpi.bg}`}>
+                  <Icon className={`h-4.5 w-4.5 ${kpi.color}`} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-3xl font-bold font-mono tracking-tight text-foreground">
+                  {kpi.value}
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">{kpi.hint}</p>
-              </CardContent>
+              </div>
             </Card>
           );
         })}
       </div>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-base">Filters</CardTitle>
-          <CardDescription>
-            Narrow the book by customer, payment state or issue date.
-          </CardDescription>
+      {/* Filter Control Card */}
+      <Card>
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <Filter className="h-4 w-4 text-primary" /> Filter Financial Records
+          </CardTitle>
+          <CardDescription>Narrow the invoice ledger by customer, payment state or issue date.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form
-            method="get"
-            className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-5"
-          >
+        <CardContent className="pt-4">
+          <form method="get" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end">
             <div className="space-y-1.5">
               <Label htmlFor="customer">Customer</Label>
               <Select id="customer" name="customer" defaultValue={customerId}>
                 <option value="">All customers</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name ?? c.email}
                   </option>
                 ))}
               </Select>
@@ -209,10 +220,10 @@ export default async function FinancePage({
             <div className="space-y-1.5">
               <Label htmlFor="state">Payment state</Label>
               <Select id="state" name="state" defaultValue={stateParam}>
-                <option value="">All states</option>
-                {INVOICE_PAYMENT_STATES.map((state) => (
-                  <option key={state} value={state}>
-                    {INVOICE_PAYMENT_STATE_LABEL[state]}
+                <option value="">All payment states</option>
+                {INVOICE_PAYMENT_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {INVOICE_PAYMENT_STATE_LABEL[s]}
                   </option>
                 ))}
               </Select>
@@ -228,11 +239,9 @@ export default async function FinancePage({
               <Input id="to" name="to" type="date" defaultValue={toParam} />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button type="submit" className="flex-1">
-                <Filter /> Apply
-              </Button>
-              <Button asChild type="button" variant="outline">
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">Apply filters</Button>
+              <Button asChild variant="outline">
                 <Link href="/admin/finance">Reset</Link>
               </Button>
             </div>
@@ -240,48 +249,54 @@ export default async function FinancePage({
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-base">Invoices</CardTitle>
-          <CardDescription>
-            {rows.length} invoice{rows.length === 1 ? "" : "s"} match the current filters.
-          </CardDescription>
-        </CardHeader>
+      {/* Ledger Table */}
+      <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Number</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Subscription</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Paid</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.length === 0 ? (
+          {rows.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No matching invoices found"
+              description="No financial records match your current filter parameters. Try resetting your search filters."
+              action={{
+                label: "Reset Filters",
+                href: "/admin/finance",
+              }}
+            />
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                    No invoices match these filters.
-                  </TableCell>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Subscription</TableHead>
+                  <TableHead>Issued</TableHead>
+                  <TableHead>Due date</TableHead>
+                  <TableHead>Payment state</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
-              ) : (
-                rows.map(({ invoice, state, balance }) => (
+              </TableHeader>
+              <TableBody>
+                {rows.map(({ invoice, state, balance }) => (
                   <TableRow key={invoice.id}>
-                    <TableCell>
+                    <TableCell className="font-mono font-medium">
                       <Link
                         href={`/admin/invoices/${invoice.id}`}
-                        className="font-medium text-primary hover:underline"
+                        className="text-primary hover:underline"
                       >
                         {invoice.number}
                       </Link>
                     </TableCell>
-                    <TableCell>{invoice.customer.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell>
+                      <p className="font-medium text-foreground">{invoice.customer.name}</p>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
                       {invoice.subscription.reference}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDate(invoice.issuedAt)}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {formatDate(invoice.dueAt)}
@@ -291,26 +306,34 @@ export default async function FinancePage({
                         {INVOICE_PAYMENT_STATE_LABEL[state]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-mono font-medium">
                       {formatCurrency(invoice.total)}
                     </TableCell>
-                    <TableCell className="text-right text-emerald-700">
+                    <TableCell className="text-right font-mono text-emerald-600">
                       {formatCurrency(invoice.paidAmount)}
                     </TableCell>
                     <TableCell
                       className={
                         balance > 0
-                          ? "text-right font-medium text-destructive"
-                          : "text-right text-muted-foreground"
+                          ? "text-right font-mono font-semibold text-destructive"
+                          : "text-right font-mono text-muted-foreground"
                       }
                     >
                       {formatCurrency(balance)}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/admin/invoices/${invoice.id}`}>
+                          <span>View</span>
+                          <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

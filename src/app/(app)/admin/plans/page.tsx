@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { CalendarClock, Pencil, Plus } from "lucide-react";
 
 import { deletePlanAction, togglePlanStatusAction } from "@/app/actions/plans";
 import { DeleteButton } from "@/components/delete-button";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,15 +37,15 @@ export default async function PlansPage() {
   });
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title="Plans"
-        description="Subscription plans with frequency, minimum quantity, dates and lifecycle flags."
+        title="Subscription Plans"
+        description="Configurable billing intervals, minimum contract quantities, and automated renewal lifecycle rules."
       >
         {canManage ? (
           <Button asChild>
             <Link href="/admin/plans/new">
-              <Plus /> New plan
+              <Plus className="mr-1.5 h-4 w-4" /> New plan
             </Link>
           </Button>
         ) : (
@@ -54,67 +55,63 @@ export default async function PlansPage() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Plan</TableHead>
-                <TableHead>Frequency</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Min qty</TableHead>
-                <TableHead>Active window</TableHead>
-                <TableHead>Lifecycle</TableHead>
-                <TableHead>Status</TableHead>
-                {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {plans.length === 0 ? (
+          {plans.length === 0 ? (
+            <EmptyState
+              icon={CalendarClock}
+              title="No subscription plans configured"
+              description="Create recurring plans linked to products with customizable frequencies and renewal terms."
+              action={
+                canManage
+                  ? {
+                      label: "Create Plan",
+                      href: "/admin/plans/new",
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={canManage ? 8 : 7}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    No plans yet.
-                  </TableCell>
+                  <TableHead>Plan Details</TableHead>
+                  <TableHead>Frequency</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-center">Min qty</TableHead>
+                  <TableHead>Active window</TableHead>
+                  <TableHead>Lifecycle rules</TableHead>
+                  <TableHead>Status</TableHead>
+                  {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
                 </TableRow>
-              ) : (
-                plans.map((plan) => (
+              </TableHeader>
+              <TableBody>
+                {plans.map((plan) => (
                   <TableRow key={plan.id}>
                     <TableCell>
-                      <p className="font-medium">{plan.name}</p>
+                      <p className="font-semibold text-foreground">{plan.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {plan.product?.name ?? "No product linked"}
+                        {plan.product?.name ? `Product: ${plan.product.name}` : "No product linked"}
                       </p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {FREQUENCY_LABEL[plan.frequency as Frequency] ??
-                          plan.frequency}
+                        {FREQUENCY_LABEL[plan.frequency as Frequency] ?? plan.frequency}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="text-right font-mono font-semibold text-foreground">
                       {formatCurrency(plan.price)}
                     </TableCell>
-                    <TableCell>{plan.minQuantity}</TableCell>
+                    <TableCell className="text-center font-mono">{plan.minQuantity}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {formatDate(plan.startDate)}
-                      <br />→ {formatDate(plan.endDate)}
+                      {formatDate(plan.startDate)} → {formatDate(plan.endDate)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {plan.autoClose ? <Badge variant="success">autoClose</Badge> : null}
+                        {plan.autoRenew ? <Badge variant="secondary" className="text-[10px]">auto-renew</Badge> : null}
+                        {plan.pauseAllowed ? <Badge variant="secondary" className="text-[10px]">pausable</Badge> : null}
                         {plan.earlyClose ? (
-                          <Badge variant="warning">
-                            earlyClose{plan.earlyCloseDays > 0 ? ` (${plan.earlyCloseDays}d)` : ""}
+                          <Badge variant="warning" className="text-[10px]">
+                            early-close{plan.earlyCloseDays > 0 ? ` (${plan.earlyCloseDays}d)` : ""}
                           </Badge>
-                        ) : null}
-                        {plan.pauseAllowed ? <Badge variant="secondary">pause</Badge> : null}
-                        {plan.autoRenew ? <Badge>renew</Badge> : null}
-                        {!plan.autoClose &&
-                        !plan.earlyClose &&
-                        !plan.pauseAllowed &&
-                        !plan.autoRenew ? (
-                          <span className="text-xs text-muted-foreground">none</span>
                         ) : null}
                       </div>
                     </TableCell>
@@ -124,33 +121,34 @@ export default async function PlansPage() {
                       </Badge>
                     </TableCell>
                     {canManage ? (
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <form action={togglePlanStatusAction}>
-                            <input type="hidden" name="id" value={plan.id} />
-                            <Button type="submit" variant="ghost" size="sm">
-                              {plan.status === "ACTIVE" ? "Deactivate" : "Activate"}
-                            </Button>
-                          </form>
-                          <Button asChild variant="ghost" size="sm">
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button asChild size="sm" variant="ghost">
                             <Link href={`/admin/plans/${plan.id}`}>
-                              <Pencil /> Edit
+                              <Pencil className="h-3.5 w-3.5" />
+                              <span className="sr-only">Edit</span>
                             </Link>
                           </Button>
+                          <form action={togglePlanStatusAction}>
+                            <input type="hidden" name="id" value={plan.id} />
+                            <Button size="sm" variant="outline" className="text-xs">
+                              {plan.status === "ACTIVE" ? "Archive" : "Activate"}
+                            </Button>
+                          </form>
                           <DeleteButton
                             id={plan.id}
                             action={deletePlanAction}
                             title={`Delete “${plan.name}”?`}
-                            description="This permanently removes the plan."
+                            description="This plan will be removed from future subscription selections."
                           />
                         </div>
                       </TableCell>
                     ) : null}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

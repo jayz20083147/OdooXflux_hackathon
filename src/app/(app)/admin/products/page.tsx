@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { Package, Pencil, Plus } from "lucide-react";
 
 import { deleteProductAction, toggleProductActiveAction } from "@/app/actions/products";
 import { DeleteButton } from "@/components/delete-button";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,15 +35,15 @@ export default async function ProductsPage() {
   });
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title="Products"
-        description="Products and their variants (e.g. brand surcharges)."
+        title="Products & Variants"
+        description="Catalog products, SKUs, and tiered variants with customizable pricing surcharges."
       >
         {canManage ? (
           <Button asChild>
             <Link href="/admin/products/new">
-              <Plus /> New product
+              <Plus className="mr-1.5 h-4 w-4" /> New product
             </Link>
           </Button>
         ) : (
@@ -52,93 +53,100 @@ export default async function ProductsPage() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Base price</TableHead>
-                <TableHead>Variants</TableHead>
-                <TableHead>Plans</TableHead>
-                <TableHead>Status</TableHead>
-                {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.length === 0 ? (
+          {products.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No products in catalog"
+              description="Add digital products, software licenses, or physical goods with variant options to offer subscribers."
+              action={
+                canManage
+                  ? {
+                      label: "Create Product",
+                      href: "/admin/products/new",
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={canManage ? 7 : 6}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    No products yet. Seed data provides 5 products with variants.
-                  </TableCell>
+                  <TableHead>Product Name & SKU</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Base Price</TableHead>
+                  <TableHead>Configured Variants</TableHead>
+                  <TableHead className="text-center">Linked Plans</TableHead>
+                  <TableHead>Status</TableHead>
+                  {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
                 </TableRow>
-              ) : (
-                products.map((product) => (
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
-                      <p className="font-medium">{product.name}</p>
+                      <p className="font-semibold text-foreground">{product.name}</p>
                       <p className="font-mono text-xs text-muted-foreground">
-                        {product.sku}
+                        SKU: {product.sku}
                       </p>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {product.category || "—"}
+                      {product.category || "General"}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="text-right font-mono font-semibold text-foreground">
                       {formatCurrency(product.basePrice)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {product.variants.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">none</span>
+                          <span className="text-xs text-muted-foreground">None</span>
                         ) : (
                           product.variants.map((variant) => (
-                            <Badge key={variant.id} variant="outline">
-                              {variant.type}: {variant.value}
+                            <Badge key={variant.id} variant="outline" className="text-[11px]">
+                              {variant.value}
                               {variant.surcharge > 0
-                                ? ` +${formatCurrency(variant.surcharge)}`
+                                ? ` (+${formatCurrency(variant.surcharge)})`
                                 : ""}
                             </Badge>
                           ))
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{product._count.plans}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-100 px-2 text-xs font-semibold text-slate-700">
+                        {product._count.plans}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={product.active ? "success" : "secondary"}>
-                        {product.active ? "Active" : "Inactive"}
+                        {product.active ? "Active" : "Archived"}
                       </Badge>
                     </TableCell>
                     {canManage ? (
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <form action={toggleProductActiveAction}>
-                            <input type="hidden" name="id" value={product.id} />
-                            <Button type="submit" variant="ghost" size="sm">
-                              {product.active ? "Deactivate" : "Activate"}
-                            </Button>
-                          </form>
-                          <Button asChild variant="ghost" size="sm">
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button asChild size="sm" variant="ghost">
                             <Link href={`/admin/products/${product.id}`}>
-                              <Pencil /> Edit
+                              <Pencil className="h-3.5 w-3.5" />
+                              <span className="sr-only">Edit</span>
                             </Link>
                           </Button>
+                          <form action={toggleProductActiveAction.bind(null, product.id)}>
+                            <Button size="sm" variant="outline" className="text-xs">
+                              {product.active ? "Archive" : "Activate"}
+                            </Button>
+                          </form>
                           <DeleteButton
-                            id={product.id}
-                            action={deleteProductAction}
-                            title={`Delete “${product.name}”?`}
-                            description="This removes the product and all of its variants. Plans linked to it will keep their history but lose the product link."
+                            action={deleteProductAction.bind(null, product.id)}
+                            title="Delete product"
                           />
                         </div>
                       </TableCell>
                     ) : null}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

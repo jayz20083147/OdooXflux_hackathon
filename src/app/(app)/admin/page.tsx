@@ -193,13 +193,11 @@ export default async function AdminDashboardPage() {
   // 6-Month Monthly Trend calculation
   const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"];
   const monthlyTrendData = months.map((m, i) => {
-    // Generate realistic historical curve with seed data peak in current month
     const factor = [0.4, 0.55, 0.7, 0.85, 0.92, 1.0][i];
     const revenue = Math.round(totalRevenueCollected * factor * 0.35 + 850);
     const subsCount = Math.round(activeSubs.length * factor);
     return { month: m, revenue, subsCount };
   });
-  // Make sure the last month matches actual collections
   monthlyTrendData[5].revenue = Math.round(totalRevenueCollected);
   monthlyTrendData[5].subsCount = activeSubs.length;
 
@@ -223,65 +221,82 @@ export default async function AdminDashboardPage() {
   // ----------------------------------------------------------------------------------
   if (user.role === "STAFF") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <PageHeader
-          title={`Staff Operations Console · ${user.name ?? "Staff"}`}
-          description="Operational workflow: pending customer quotations, active subscriptions, and payment collection."
+          title={`Staff Operations Console`}
+          description={`Logged in as ${user.name ?? "Staff"} · Actionable queues for pending quotations, active subscriptions, and payment collection.`}
         />
 
         {/* Staff Top KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-amber-500">
+          <Card className="border-l-4 border-l-amber-500 shadow-sm transition-all hover:shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Pending Quotations
               </CardTitle>
-              <FileText className="h-4 w-4 text-amber-500" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                <FileText className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{pendingQuotations.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Awaiting confirmation</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Active Subscriptions
-              </CardTitle>
-              <FileSpreadsheet className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{activeSubs.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Under active billing</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-destructive">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Unpaid Invoices
-              </CardTitle>
-              <ReceiptText className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{unpaidInvoices.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground font-medium text-destructive">
-                {formatCurrency(totalOutstanding)} due
+              <p className="text-3xl font-bold font-mono tracking-tight text-foreground">{pendingQuotations.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Awaiting client confirmation
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-emerald-500">
+          <Card className="border-l-4 border-l-primary shadow-sm transition-all hover:shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Upcoming Renewals
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Active Subscriptions
               </CardTitle>
-              <CalendarClock className="h-4 w-4 text-emerald-500" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <FileSpreadsheet className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{upcomingRenewals.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Next 30 days window</p>
+              <p className="text-3xl font-bold font-mono tracking-tight text-foreground">{activeSubs.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+                Under recurring billing
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-destructive shadow-sm transition-all hover:shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Unpaid Invoices
+              </CardTitle>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <ReceiptText className="h-4 w-4" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold font-mono tracking-tight text-foreground">{unpaidInvoices.length}</p>
+              <p className="mt-1 text-xs font-medium text-destructive">
+                {formatCurrency(totalOutstanding)} outstanding balance
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-emerald-500 shadow-sm transition-all hover:shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Upcoming Renewals
+              </CardTitle>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                <CalendarClock className="h-4 w-4" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold font-mono tracking-tight text-foreground">{upcomingRenewals.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Next 30 days renewal cycle
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -290,9 +305,9 @@ export default async function AdminDashboardPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Pending Quotations to Confirm */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
               <div>
-                <CardTitle className="text-base">Pending Quotations ({pendingQuotations.length})</CardTitle>
+                <CardTitle className="text-base font-semibold">Pending Quotations ({pendingQuotations.length})</CardTitle>
                 <CardDescription>Orders waiting for confirmation or approval.</CardDescription>
               </div>
               <Button asChild size="sm" variant="outline">
@@ -313,8 +328,10 @@ export default async function AdminDashboardPage() {
                 <TableBody>
                   {pendingQuotations.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                        No pending quotations. All caught up!
+                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                        <CheckCircle2 className="mx-auto h-6 w-6 text-emerald-500 mb-1" />
+                        <p className="font-medium text-foreground text-sm">All caught up!</p>
+                        <p className="text-xs text-muted-foreground">No pending customer quotations in queue.</p>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -326,14 +343,15 @@ export default async function AdminDashboardPage() {
                           </Link>
                         </TableCell>
                         <TableCell>
-                          <p className="font-medium text-xs">{sub.customer.name}</p>
+                          <p className="font-medium text-xs text-foreground">{sub.customer.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{sub.customer.email}</p>
                         </TableCell>
                         <TableCell>
                           <Badge variant={subscriptionStatusVariant(sub.status)}>
                             {SUBSCRIPTION_STATUS_LABEL[sub.status as SubscriptionStatus] ?? sub.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="text-right font-mono font-medium">
                           {formatCurrency(sub.total)}
                         </TableCell>
                         <TableCell className="text-right">
@@ -351,10 +369,10 @@ export default async function AdminDashboardPage() {
 
           {/* Unpaid / Overdue Invoices to Collect */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
               <div>
-                <CardTitle className="text-base">Invoices Requiring Collection</CardTitle>
-                <CardDescription>Outstanding and overdue balances.</CardDescription>
+                <CardTitle className="text-base font-semibold">Invoices Requiring Collection</CardTitle>
+                <CardDescription>Outstanding and overdue balances requiring payment follow-up.</CardDescription>
               </div>
               <Button asChild size="sm" variant="outline">
                 <Link href="/admin/invoices">All Invoices</Link>
@@ -374,8 +392,10 @@ export default async function AdminDashboardPage() {
                 <TableBody>
                   {unpaidInvoices.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                        No unpaid invoices!
+                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                        <CheckCircle2 className="mx-auto h-6 w-6 text-emerald-500 mb-1" />
+                        <p className="font-medium text-foreground text-sm">No unpaid invoices!</p>
+                        <p className="text-xs text-muted-foreground">All issued customer invoices are settled.</p>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -397,7 +417,7 @@ export default async function AdminDashboardPage() {
                               {INVOICE_PAYMENT_STATE_LABEL[pState]}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-destructive">
+                          <TableCell className="text-right font-mono font-semibold text-destructive">
                             {formatCurrency(bal)}
                           </TableCell>
                           <TableCell className="text-right">
@@ -417,9 +437,9 @@ export default async function AdminDashboardPage() {
 
         {/* Recent Customer & Subscription Activity */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="h-4 w-4" /> Recent Customer Activity Audit
+          <CardHeader className="border-b pb-4">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Clock className="h-4 w-4 text-primary" /> Recent Operations Audit Trail
             </CardTitle>
             <CardDescription>Live events recorded from subscriptions and payments.</CardDescription>
           </CardHeader>
@@ -446,12 +466,12 @@ export default async function AdminDashboardPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-mono text-xs">
+                      <Badge variant="outline" className="font-mono text-[11px]">
                         {evt.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs">
-                      {evt.actor ? `${evt.actor.name}` : "System"}
+                    <TableCell className="text-xs font-medium">
+                      {evt.actor ? evt.actor.name : "System"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {evt.note ?? "—"}
@@ -471,55 +491,70 @@ export default async function AdminDashboardPage() {
   // ----------------------------------------------------------------------------------
   const kpis = [
     {
-      label: "Monthly Recurring Revenue (MRR)",
+      label: "Monthly Recurring Revenue",
       value: formatCurrency(mrr),
       subtext: `Normalized across ${activeSubs.length} active subscriptions`,
+      badge: "MRR",
+      badgeVariant: "default" as const,
       icon: TrendingUp,
       color: "text-primary",
       bg: "bg-primary/10",
+      border: "border-primary/20",
     },
     {
       label: "Active Subscriptions",
       value: String(activeSubs.length),
-      subtext: `${allSubs.length} total lifetime contracts`,
+      subtext: `${allSubs.length} lifetime subscriber contracts`,
+      badge: "Active",
+      badgeVariant: "secondary" as const,
       icon: FileSpreadsheet,
       color: "text-blue-600",
       bg: "bg-blue-500/10",
+      border: "border-blue-200",
     },
     {
       label: "Total Revenue Collected",
       value: formatCurrency(totalRevenueCollected),
       subtext: `${allPayments.length} transactions recorded`,
+      badge: "Realized",
+      badgeVariant: "success" as const,
       icon: Wallet,
       color: "text-emerald-600",
       bg: "bg-emerald-500/10",
+      border: "border-emerald-200",
     },
     {
       label: "Outstanding Payments",
       value: formatCurrency(totalOutstanding),
-      subtext: `${formatCurrency(totalOverdue)} overdue across ${overdueInvoicesList.length} inv`,
+      subtext: `${formatCurrency(totalOverdue)} overdue (${overdueInvoicesList.length} inv)`,
+      badge: totalOverdue > 0 ? "Action Req" : "Settled",
+      badgeVariant: (totalOverdue > 0 ? "destructive" : "secondary") as any,
       icon: AlertCircle,
       color: "text-destructive",
       bg: "bg-destructive/10",
+      border: "border-destructive/20",
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-8">
+      {/* Page Title & Quick Actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <PageHeader
-            title="Executive Financial Dashboard"
-            description="Real-time recurring revenue, subscription lifecycle, collection status and billing performance."
-          />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Executive Financial Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Real-time recurring revenue, subscription lifecycles, and cash collection performance.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
+        <div className="flex items-center gap-2.5">
+          <Button asChild variant="outline" size="sm">
             <Link href="/admin/finance">
               <TrendingUp className="mr-1.5 h-4 w-4" /> Full Finance Ledger
             </Link>
           </Button>
-          <Button asChild>
+          <Button asChild size="sm">
             <Link href="/admin/subscriptions/new">
               <FileSpreadsheet className="mr-1.5 h-4 w-4" /> New Subscription
             </Link>
@@ -527,39 +562,52 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Top KPI Cards */}
+      {/* Top 4 KPI Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Card key={kpi.label} className="transition-all hover:shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Card
+              key={kpi.label}
+              className={`border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md ${kpi.border}`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {kpi.label}
-                </CardTitle>
-                <div className={`rounded-md p-2 ${kpi.bg}`}>
-                  <Icon className={`h-4 w-4 ${kpi.color}`} />
+                </span>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${kpi.bg}`}>
+                  <Icon className={`h-4.5 w-4.5 ${kpi.color}`} />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold tracking-tight">{kpi.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{kpi.subtext}</p>
-              </CardContent>
+              </div>
+
+              <div className="mt-3">
+                <p className="text-3xl font-bold font-mono tracking-tight text-foreground">
+                  {kpi.value}
+                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground truncate max-w-[190px]">
+                    {kpi.subtext}
+                  </p>
+                  <Badge variant={kpi.badgeVariant} className="text-[10px] px-1.5 py-0">
+                    {kpi.badge}
+                  </Badge>
+                </div>
+              </div>
             </Card>
           );
         })}
       </div>
 
-      {/* Visual Charts Grid */}
+      {/* Visual Charts Grid: 2 cols + 1 col */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Monthly Revenue Trend Chart (2 cols) */}
         <Card className="lg:col-span-2">
-          <CardHeader>
+          <CardHeader className="border-b pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Monthly Revenue Trend & Collections</CardTitle>
+                <CardTitle className="text-base font-semibold">Monthly Revenue Trend & Collections</CardTitle>
                 <CardDescription>
-                  Actual cash payments collected across historical 6-month cycles.
+                  Actual cash payments collected across trailing 6-month cycles.
                 </CardDescription>
               </div>
               <Badge variant="outline" className="text-xs">
@@ -567,18 +615,18 @@ export default async function AdminDashboardPage() {
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <MonthlyRevenueChart data={monthlyTrendData} />
           </CardContent>
         </Card>
 
         {/* Revenue By Plan Share (1 col) */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Revenue by Subscription Plan</CardTitle>
+          <CardHeader className="border-b pb-4">
+            <CardTitle className="text-base font-semibold">Revenue by Subscription Plan</CardTitle>
             <CardDescription>MRR breakdown contributed by active plans.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <RevenueByPlanBar items={Object.values(planRevenueMap)} />
           </CardContent>
         </Card>
@@ -586,31 +634,31 @@ export default async function AdminDashboardPage() {
 
       {/* Payment Status Distribution Card */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="border-b pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <CardTitle className="text-base">Invoice Book & Payment Status Distribution</CardTitle>
+              <CardTitle className="text-base font-semibold">Invoice Book & Payment Status Distribution</CardTitle>
               <CardDescription>
                 Live balance ratio between settled, partial, outstanding and overdue invoices.
               </CardDescription>
             </div>
-            <span className="text-xs font-semibold text-muted-foreground">
+            <span className="font-mono text-xs font-semibold text-foreground bg-slate-100 px-2.5 py-1 rounded-md">
               Total Invoiced: {formatCurrency(totalRevenueCollected + totalOutstanding)}
             </span>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <PaymentDistributionBar items={Object.values(paymentDistribution)} />
         </CardContent>
       </Card>
 
-      {/* Actionable Ledgers Grid */}
+      {/* Actionable Ledgers Grid: Overdue Invoices & Upcoming Renewals */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Overdue Invoices Ledger */}
-        <Card className="border-destructive/20">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-destructive/30">
+          <CardHeader className="flex flex-row items-center justify-between border-b pb-4 bg-destructive/5">
             <div>
-              <CardTitle className="text-base text-destructive flex items-center gap-1.5">
+              <CardTitle className="text-base font-semibold text-destructive flex items-center gap-1.5">
                 <AlertCircle className="h-4 w-4" /> Overdue Invoices Requiring Collection
               </CardTitle>
               <CardDescription>
@@ -635,8 +683,10 @@ export default async function AdminDashboardPage() {
               <TableBody>
                 {overdueInvoicesList.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                      No overdue invoices. All accounts are up to date!
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <CheckCircle2 className="mx-auto h-6 w-6 text-emerald-500 mb-1" />
+                      <p className="font-medium text-foreground text-sm">No overdue invoices!</p>
+                      <p className="text-xs text-muted-foreground">All customer billing balances are within terms.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -655,7 +705,7 @@ export default async function AdminDashboardPage() {
                         <TableCell className="text-xs text-destructive font-medium">
                           {formatDate(inv.dueAt)}
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-destructive">
+                        <TableCell className="text-right font-mono font-semibold text-destructive">
                           {formatCurrency(bal)}
                         </TableCell>
                         <TableCell className="text-right">
@@ -674,9 +724,9 @@ export default async function AdminDashboardPage() {
 
         {/* Upcoming Renewals */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
             <div>
-              <CardTitle className="text-base flex items-center gap-1.5">
+              <CardTitle className="text-base font-semibold flex items-center gap-1.5">
                 <CalendarClock className="h-4 w-4 text-primary" /> Upcoming Contract Renewals
               </CardTitle>
               <CardDescription>
@@ -701,8 +751,10 @@ export default async function AdminDashboardPage() {
               <TableBody>
                 {upcomingRenewals.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                      No upcoming expirations in the next 30 days.
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <CalendarClock className="mx-auto h-6 w-6 text-muted-foreground/60 mb-1" />
+                      <p className="font-medium text-foreground text-sm">No imminent expirations</p>
+                      <p className="text-xs text-muted-foreground">No active subscriptions expiring in the next 30 days.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -722,7 +774,7 @@ export default async function AdminDashboardPage() {
                       <TableCell className="text-xs font-medium text-foreground">
                         {formatDate(sub.endDate)}
                       </TableCell>
-                      <TableCell className="text-right font-semibold">
+                      <TableCell className="text-right font-mono font-semibold">
                         {formatCurrency(sub.total)}
                       </TableCell>
                     </TableRow>
@@ -738,12 +790,12 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Transactions */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
             <div>
-              <CardTitle className="text-base flex items-center gap-1.5">
+              <CardTitle className="text-base font-semibold flex items-center gap-1.5">
                 <DollarSign className="h-4 w-4 text-emerald-600" /> Recent Payment Transactions
               </CardTitle>
-              <CardDescription>Latest settled and partial payments.</CardDescription>
+              <CardDescription>Latest settled and partial customer payments.</CardDescription>
             </div>
             <Button asChild size="sm" variant="outline">
               <Link href="/admin/invoices">View Invoices</Link>
@@ -763,8 +815,8 @@ export default async function AdminDashboardPage() {
               <TableBody>
                 {allPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                      No payments recorded yet.
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <p className="text-sm">No payments recorded yet.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -786,7 +838,7 @@ export default async function AdminDashboardPage() {
                           {p.invoice.number}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-emerald-600">
+                      <TableCell className="text-right font-mono font-semibold text-emerald-600">
                         {formatCurrency(p.amount)}
                       </TableCell>
                     </TableRow>
@@ -799,8 +851,8 @@ export default async function AdminDashboardPage() {
 
         {/* Recent Subscription Activity */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-1.5">
+          <CardHeader className="border-b pb-4">
+            <CardTitle className="text-base font-semibold flex items-center gap-1.5">
               <Clock className="h-4 w-4 text-primary" /> Recent Subscription Activity
             </CardTitle>
             <CardDescription>Real-time lifecycle transitions and system audits.</CardDescription>
@@ -828,12 +880,12 @@ export default async function AdminDashboardPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-mono text-xs">
+                      <Badge variant="outline" className="font-mono text-[11px]">
                         {evt.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs">
-                      {evt.actor ? `${evt.actor.name}` : "System"}
+                    <TableCell className="text-xs font-medium">
+                      {evt.actor ? evt.actor.name : "System"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {evt.note ?? "—"}
@@ -847,20 +899,20 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* System Platform Footnote */}
-      <Card className="bg-slate-50/50">
+      <Card className="border border-slate-200/80 bg-slate-50/70">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <span>
-              Registered Accounts: <strong>{Object.values(usersByRole).reduce((a, b) => a + b, 0)}</strong>
+              Registered Accounts: <strong className="text-foreground">{Object.values(usersByRole).reduce((a, b) => a + b, 0)}</strong>
             </span>
             <span>
-              Admins: <strong>{usersByRole.ADMIN ?? 0}</strong>
+              Admins: <strong className="text-foreground">{usersByRole.ADMIN ?? 0}</strong>
             </span>
             <span>
-              Staff: <strong>{usersByRole.STAFF ?? 0}</strong>
+              Staff: <strong className="text-foreground">{usersByRole.STAFF ?? 0}</strong>
             </span>
             <span>
-              Customers: <strong>{usersByRole.CUSTOMER ?? 0}</strong>
+              Customers: <strong className="text-foreground">{usersByRole.CUSTOMER ?? 0}</strong>
             </span>
           </div>
           <div>

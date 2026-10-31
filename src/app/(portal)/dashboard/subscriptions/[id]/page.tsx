@@ -94,12 +94,30 @@ export default async function CustomerSubscriptionDetailPage({
             {plan ? FREQUENCY_LABEL[plan.frequency as Frequency]?.toLowerCase() : "periodically"}
           </p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" size="sm">
           <Link href="/dashboard/subscriptions">
             <ArrowLeft className="mr-1.5 h-4 w-4" /> My Subscriptions
           </Link>
         </Button>
       </div>
+
+      {/* Visual Status Callout */}
+      {sub.status === "ACTIVE" && !isPaused ? (
+        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/80 text-emerald-800 font-bold text-xs">✓</span>
+          <p><strong className="font-semibold">Active Subscription:</strong> Your subscription is active and billing automatically.</p>
+        </div>
+      ) : isPaused ? (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200/80 text-amber-800 font-bold text-xs">⏸</span>
+          <p><strong className="font-semibold">Subscription Paused:</strong> Deliveries and recurring billing are paused until resumed.</p>
+        </div>
+      ) : sub.status === "CLOSED" ? (
+        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 shadow-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-800 font-bold text-xs">●</span>
+          <p><strong className="font-semibold">Subscription Closed:</strong> This contract has expired or terminated.</p>
+        </div>
+      ) : null}
 
       {/* Customer Self-Service Lifecycle Controls */}
       {canPause || canResume || canEarlyClose ? (

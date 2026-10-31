@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, ReceiptText } from "lucide-react";
 
+import { EmptyState } from "@/components/empty-state";
 import { paymentStateVariant } from "@/components/subscription-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 
-export const metadata = { title: "My invoices · Brightloop" };
+export const metadata = { title: "My Invoices · Brightloop" };
 
 export default async function CustomerInvoicesPage() {
   const user = await requireUser();
@@ -40,49 +41,63 @@ export default async function CustomerInvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">My invoices</h1>
-          <p className="text-sm text-muted-foreground">
-            Outstanding balance: <span className="font-medium">{formatCurrency(outstanding)}</span>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            My Invoices
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Billing history, payment receipts and invoice settlement options.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/dashboard">
-            <ArrowLeft /> Back
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg border bg-white px-3 py-1.5 shadow-xs">
+            <span className="text-xs text-muted-foreground">Outstanding: </span>
+            <span className={`font-mono text-sm font-bold ${outstanding > 0 ? "text-destructive" : "text-emerald-600"}`}>
+              {formatCurrency(outstanding)}
+            </span>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard">
+              <ArrowLeft className="mr-1.5 h-4 w-4" /> Overview
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Number</TableHead>
-                <TableHead>Subscription</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoices.length === 0 ? (
+          {invoices.length === 0 ? (
+            <EmptyState
+              icon={ReceiptText}
+              title="No invoices found"
+              description="You have no generated invoices yet. Invoices appear automatically on recurring billing cycles."
+              action={{
+                label: "Back to Overview",
+                href: "/dashboard",
+              }}
+            />
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                    No invoices yet.
-                  </TableCell>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Subscription</TableHead>
+                  <TableHead>Billing Period</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Payment State</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Balance Due</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : (
-                invoices.map((invoice) => {
+              </TableHeader>
+              <TableBody>
+                {invoices.map((invoice) => {
                   const state = invoicePaymentState(invoice);
                   const balance = invoiceBalance(invoice);
                   return (
                     <TableRow key={invoice.id}>
-                      <TableCell>
+                      <TableCell className="font-mono font-medium">
                         <Link
                           href={`/dashboard/invoices/${invoice.id}`}
                           className="font-medium text-primary hover:underline"
@@ -90,7 +105,7 @@ export default async function CustomerInvoicesPage() {
                           {invoice.number}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="font-mono text-xs text-muted-foreground">
                         {invoice.subscription.reference}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -104,37 +119,33 @@ export default async function CustomerInvoicesPage() {
                           {INVOICE_PAYMENT_STATE_LABEL[state]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right font-mono font-medium">
                         {formatCurrency(invoice.total)}
                       </TableCell>
                       <TableCell
                         className={
                           balance > 0
-                            ? "text-right font-medium text-destructive"
-                            : "text-right text-muted-foreground"
+                            ? "text-right font-mono font-semibold text-destructive"
+                            : "text-right font-mono text-muted-foreground"
                         }
                       >
                         {formatCurrency(balance)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button asChild variant="ghost" size="sm">
+                        <Button asChild size="sm" variant={balance > 0 ? "default" : "outline"}>
                           <Link href={`/dashboard/invoices/${invoice.id}`}>
-                            <FileText /> View
+                            {balance > 0 ? "Pay Now" : "Receipt"}
                           </Link>
                         </Button>
                       </TableCell>
                     </TableRow>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
-
-      <p className="text-sm text-muted-foreground">
-        Invoices are issued by Brightloop staff. Contact support if a payment looks wrong.
-      </p>
     </div>
   );
 }
