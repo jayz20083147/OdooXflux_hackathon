@@ -394,7 +394,7 @@ async function main() {
 
   // ---------------------------------------------------------- tax rules
   const taxRules = [
-    { name: "Sales Tax (10%)", rate: 10, scope: "ALL", scopeValue: null, active: true },
+    { name: "Sales Tax (10%)", rate: 10, scope: "CATEGORY", scopeValue: "Physical Goods", active: true },
     {
       name: "Beverage Levy (5%)",
       rate: 5,

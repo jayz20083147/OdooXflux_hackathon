@@ -41,6 +41,7 @@ export function lineToBilling(line: {
 export async function recalcSubscriptionTotals(
   subscriptionId: string,
   now: Date = new Date(),
+  couponCode?: string | null,
 ) {
   const subscription = await prisma.subscription.findUnique({
     where: { id: subscriptionId },
@@ -50,7 +51,7 @@ export async function recalcSubscriptionTotals(
 
   const lines = subscription.lines.map(lineToBilling);
   const { taxRules, discountRules } = await loadRules();
-  const totals = computeInvoiceTotals(lines, taxRules, discountRules, now);
+  const totals = computeInvoiceTotals(lines, taxRules, discountRules, now, couponCode);
 
   await prisma.subscription.update({
     where: { id: subscriptionId },

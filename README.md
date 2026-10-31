@@ -167,14 +167,14 @@ brightloop-final/
 ├── src/
 │   ├── app/
 │   │   ├── (app)/admin/       # Admin & Staff Console
-│   │   │   ├── page.tsx       # Admin overview metrics
-│   │   │   ├── products/      # Products & Variants CRUD
-│   │   │   ├── plans/         # Plans CRUD with lifecycle flags
-│   │   │   ├── quotations/    # Quotation templates CRUD
-│   │   │   ├── subscriptions/ # Subscription management & provisioning
-│   │   │   ├── invoices/      # Invoices ledger & idempotency generator
-│   │   │   ├── taxes/         # Tax rules CRUD
-│   │   │   ├── discounts/     # Discount rules CRUD
+│   │   │   ├── page.tsx       # Dual-role Executive & Staff operations dashboard
+│   │   │   ├── products/      # Products & Variants CRUD + edit pages
+│   │   │   ├── plans/         # Plans CRUD with lifecycle flags + edit pages
+│   │   │   ├── quotations/    # Quotation templates CRUD + edit pages
+│   │   │   ├── subscriptions/ # Subscription management, detail ([id]), and edit
+│   │   │   ├── invoices/      # Invoices ledger, detail ([id]), & payment recording
+│   │   │   ├── taxes/         # Tax rules CRUD + edit pages
+│   │   │   ├── discounts/     # Discount rules CRUD + edit pages
 │   │   │   ├── staff/         # Admin-only staff account creation
 │   │   │   └── finance/       # High-performance Finance Dashboard
 │   │   ├── (auth)/            # Auth shell
@@ -184,9 +184,9 @@ brightloop-final/
 │   │   │   ├── page.tsx       # Customer overview & KPI cards
 │   │   │   ├── catalog/       # Self-service product catalog & plan checkout
 │   │   │   ├── invoices/      # Personal invoices & Pay Now modal
-│   │   │   └── subscriptions/ # Personal subscription management
+│   │   │   └── subscriptions/ # Customer subscriptions list & detail views
 │   │   ├── actions/           # Next.js Server Actions (auth, products, plans, etc.)
-│   │   ├── api/               # Secure REST API endpoints (/auth, /products, /plans, etc.)
+│   │   ├── api/               # Secure REST API endpoints (with NextAuth v5 handlers)
 │   │   ├── forbidden/         # 403 Forbidden page
 │   │   ├── globals.css        # Tailwind CSS variables & styles
 │   │   ├── layout.tsx         # Root layout
@@ -195,6 +195,7 @@ brightloop-final/
 │   │   ├── ui/                # Radix UI primitives (badge, button, card, dialog, table, etc.)
 │   │   ├── app-sidebar.tsx    # Admin & staff navigation sidebar
 │   │   ├── portal-nav.tsx     # Customer navigation header
+│   │   ├── dashboard-charts.tsx # Visual revenue trend, status distribution & plan bars
 │   │   ├── payment-form.tsx   # Payment entry component
 │   │   └── subscription-actions.tsx # Lifecycle action triggers
 │   ├── lib/

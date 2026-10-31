@@ -94,6 +94,7 @@ export function computeDiscounts(
   lines: BillingLine[],
   rules: DiscountRuleLike[],
   now: Date = new Date(),
+  couponCode?: string | null,
 ): { discounts: AppliedDiscount[]; total: number } {
   const subtotal = round2(lines.reduce((sum, line) => sum + line.amount, 0));
   const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
@@ -102,6 +103,12 @@ export function computeDiscounts(
 
   for (const rule of rules) {
     if (!rule.active) continue;
+    // Rules with a coupon code require a matching user coupon code
+    if (rule.code) {
+      if (!couponCode || rule.code.trim().toUpperCase() !== couponCode.trim().toUpperCase()) {
+        continue;
+      }
+    }
     if (rule.validFrom && now < rule.validFrom) continue;
     if (rule.validTo && now > rule.validTo) continue;
     if (rule.maxUses > 0 && rule.usedCount >= rule.maxUses) continue;
@@ -171,9 +178,10 @@ export function computeInvoiceTotals(
   taxRules: TaxRuleLike[],
   discountRules: DiscountRuleLike[],
   now: Date = new Date(),
+  couponCode?: string | null,
 ): InvoiceTotals {
   const subtotal = round2(lines.reduce((sum, line) => sum + line.amount, 0));
-  const { discounts, total: discountTotal } = computeDiscounts(lines, discountRules, now);
+  const { discounts, total: discountTotal } = computeDiscounts(lines, discountRules, now, couponCode);
   const { taxes, total: taxTotal } = computeTaxes(lines, taxRules, discountTotal);
   const total = round2(Math.max(subtotal - discountTotal + taxTotal, 0));
 

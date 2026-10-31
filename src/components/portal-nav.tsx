@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, ReceiptText, ShoppingBag } from "lucide-react";
+import { CalendarClock, LayoutDashboard, LogOut, ReceiptText, ShoppingBag } from "lucide-react";
 
 import { logoutAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/subscriptions", label: "Subscriptions", icon: CalendarClock },
   { href: "/dashboard/catalog", label: "Catalog & Plans", icon: ShoppingBag },
   { href: "/dashboard/invoices", label: "Invoices", icon: ReceiptText },
 ];

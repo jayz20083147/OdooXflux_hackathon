@@ -154,7 +154,7 @@ export async function POST(req: Request) {
       },
     });
 
-    await recalcSubscriptionTotals(subscription.id);
+    await recalcSubscriptionTotals(subscription.id, startDate, body.discountCode);
     await prisma.subscriptionEvent.create({
       data: {
         subscriptionId: subscription.id,
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
           category: plan.product?.category ?? null,
         },
       ];
-      const totals = computeInvoiceTotals(billingLines, taxRules, discountRules, startDate);
+      const totals = computeInvoiceTotals(billingLines, taxRules, discountRules, startDate, body.discountCode);
       const invNumber = await nextInvoiceNumber();
       const dueAt = new Date(startDate.getTime());
       dueAt.setDate(dueAt.getDate() + 14);
