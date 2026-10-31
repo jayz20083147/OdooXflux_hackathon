@@ -63,3 +63,6 @@ build/
 *.swp
 *.swo
 .claude/
+
+# Documents & PDFs
+*.pdf
